@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.projects</groupId>
-	<artifactId>server</artifactId>
+	<artifactId>MaroCan.25-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>server</name>
+	<name>MaroCan.25-server</name>
 	<description>server</description>
 	<url/>
 	<licenses>
