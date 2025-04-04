@@ -2,6 +2,12 @@ databaseChangeLog:
   - changeSet:
       id: 001
       author: omario
+      runOnChange: true
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: roles, users, user_roles
       changes:
         # Create roles table
         - createTable:
@@ -56,16 +62,6 @@ databaseChangeLog:
               - column:
                   name: profile_image_url
                   type: varchar(255)
-                  constraints:
-                    nullable: true
-              - column:
-                  name: country
-                  type: varchar(100)
-                  constraints:
-                    nullable: true
-              - column:
-                  name: favorite_team
-                  type: varchar(100)
                   constraints:
                     nullable: true
 
