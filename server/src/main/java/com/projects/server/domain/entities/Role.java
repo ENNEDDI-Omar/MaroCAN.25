@@ -2,15 +2,18 @@ package com.projects.server.domain.entities;
 
 import com.projects.server.domain.enums.RoleType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+/**
+ * Représente un rôle dans le système.
+ * Un rôle peut être associé à plusieurs utilisateurs.
+ */
+
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
