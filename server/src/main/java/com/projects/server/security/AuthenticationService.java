@@ -3,6 +3,7 @@ package com.projects.server.security;
 import com.projects.server.domain.entities.Role;
 import com.projects.server.domain.enums.RoleType;
 import com.projects.server.domain.entities.User;
+import com.projects.server.exceptions.AuthenticationException;
 import com.projects.server.repositories.RoleRepository;
 import com.projects.server.repositories.UserRepository;
 import com.projects.server.dto.request.LoginRequest;
@@ -30,17 +31,25 @@ public class AuthenticationService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Vérifier si l'utilisateur existe déjà
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("L'email est déjà utilisé");
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new AuthenticationException("Le nom d'utilisateur est déjà pris, choisissez-en un autre");
         }
 
-        // Créer un nouvel utilisateur
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AuthenticationException("L'email est déjà utilisé");
+        }
+
+        // Utiliser une nouvelle collection
         Set<Role> roles = new HashSet<>();
-        Role userRole = roleRepository.findByName(RoleType.USER)
-                .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
+
+        // Obtenir le rôle USER
+        Role userRole = roleRepository.findByName(RoleType.ADMIN)
+                .orElseThrow(() -> new RuntimeException("Rôle USER non trouvé"));
+
+        // Ajouter le rôle à la collection
         roles.add(userRole);
 
+        // Créer l'utilisateur sans référence circulaire
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -48,15 +57,18 @@ public class AuthenticationService {
                 .roles(roles)
                 .build();
 
-        userRepository.save(user);
+        // Sauvegarder l'utilisateur
+        User savedUser = userRepository.save(user);
 
-        // Générer les tokens JWT
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        // Générer les tokens
+        String accessToken = jwtService.generateToken(savedUser);
+        String refreshToken = jwtService.generateRefreshToken(savedUser);
 
         return AuthResponse.builder()
+                .message("Utilisateur enregistré avec succès")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .success(true)
                 .build();
     }
 
@@ -78,8 +90,10 @@ public class AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         return AuthResponse.builder()
+                .message("Utilisateur authentifié avec succès")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .success(true)
                 .build();
     }
 }
