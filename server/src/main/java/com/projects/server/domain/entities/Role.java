@@ -12,8 +12,7 @@ import java.util.Set;
  * Un rôle peut être associé à plusieurs utilisateurs.
  */
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,5 +29,9 @@ public class Role {
     private RoleType name;
 
     @ManyToMany(mappedBy = "roles")
+    @ToString.Exclude  // Pour éviter les références circulaires
+    @EqualsAndHashCode.Exclude  // Pour éviter les références circulaires
     private Set<User> users = new HashSet<>();
+
+
 }

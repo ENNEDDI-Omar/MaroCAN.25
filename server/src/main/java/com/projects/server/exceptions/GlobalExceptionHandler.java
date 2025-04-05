@@ -60,9 +60,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
+        // Loguer l'exception complète avec sa trace pour le débogage
+        ex.printStackTrace();
+
+        String errorMessage = ex.getMessage();
+        if (errorMessage == null || errorMessage.isEmpty()) {
+            errorMessage = "Une erreur inattendue s'est produite: " + ex.getClass().getSimpleName();
+        } else {
+            errorMessage = "Erreur: " + ex.getClass().getSimpleName() + " - " + errorMessage;
+        }
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                ex.getMessage(),
+                errorMessage,
                 LocalDateTime.now()
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
