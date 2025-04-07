@@ -38,18 +38,13 @@ public class AuthenticationService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AuthenticationException("L'email est déjà utilisé");
         }
-
-        // Utiliser une nouvelle collection
         Set<Role> roles = new HashSet<>();
 
-        // Obtenir le rôle USER
-        Role userRole = roleRepository.findByName(RoleType.ADMIN)
+        Role userRole = roleRepository.findByName(RoleType.USER)
                 .orElseThrow(() -> new RuntimeException("Rôle USER non trouvé"));
 
-        // Ajouter le rôle à la collection
         roles.add(userRole);
 
-        // Créer l'utilisateur sans référence circulaire
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -57,10 +52,8 @@ public class AuthenticationService {
                 .roles(roles)
                 .build();
 
-        // Sauvegarder l'utilisateur
         User savedUser = userRepository.save(user);
 
-        // Générer les tokens
         String accessToken = jwtService.generateToken(savedUser);
         String refreshToken = jwtService.generateRefreshToken(savedUser);
 
