@@ -1,5 +1,6 @@
 package com.projects.server.domain.entities;
 
+import com.projects.server.domain.enums.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -7,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,7 +18,8 @@ import java.util.Set;
  * Un utilisateur peut avoir plusieurs rôles.
  */
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,24 +41,22 @@ public class User implements UserDetails
     @Column(nullable = false)
     private String password;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Set<RoleType> roles = new HashSet<>();
+
     @Column(nullable = true)
     private String profileImageUrl;
 
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Créer une nouvelle collection pour éviter la modification concurrente
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        for (Role role : this.roles) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName().name()));
+        for (RoleType role : roles) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
         }
         return authorities;
     }

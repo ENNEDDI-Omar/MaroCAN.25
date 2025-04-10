@@ -1,10 +1,9 @@
 package com.projects.server.security;
 
-import com.projects.server.domain.entities.Role;
 import com.projects.server.domain.enums.RoleType;
 import com.projects.server.domain.entities.User;
 import com.projects.server.exceptions.AuthenticationException;
-import com.projects.server.repositories.RoleRepository;
+import com.projects.server.mapper.AuthMapper;
 import com.projects.server.repositories.UserRepository;
 import com.projects.server.dto.request.LoginRequest;
 import com.projects.server.dto.response.AuthResponse;
@@ -16,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @Service
@@ -24,10 +22,10 @@ import java.util.Set;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final AuthMapper authMapper;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -38,31 +36,28 @@ public class AuthenticationService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AuthenticationException("L'email est déjà utilisé");
         }
-        Set<Role> roles = new HashSet<>();
+        // Mapper RegisterRequest vers User
+        User user = authMapper.mapToUser(request);
 
-        Role userRole = roleRepository.findByName(RoleType.USER)
-                .orElseThrow(() -> new RuntimeException("Rôle USER non trouvé"));
+        // Définir le mot de passe encodé (non géré par le mapper)
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        roles.add(userRole);
-
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .roles(roles)
-                .build();
+        // Par défaut, attribuer le rôle USER (peut être remplacé dans certains cas)
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.setRoles(Set.of(RoleType.USER));
+        }
 
         User savedUser = userRepository.save(user);
 
-        String accessToken = jwtService.generateToken(savedUser);
-        String refreshToken = jwtService.generateRefreshToken(savedUser);
+        // Créer la réponse
+        AuthResponse response = authMapper.mapToAuthResponse(savedUser);
+        response.setMessage("Utilisateur enregistré avec succès");
 
-        return AuthResponse.builder()
-                .message("Utilisateur enregistré avec succès")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .success(true)
-                .build();
+        // Générer les tokens JWT
+        response.setAccessToken(jwtService.generateToken(savedUser));
+        response.setRefreshToken(jwtService.generateRefreshToken(savedUser));
+
+        return response;
     }
 
     public AuthResponse authenticate(LoginRequest request) {
@@ -76,17 +71,16 @@ public class AuthenticationService {
 
         // Récupérer l'utilisateur
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new AuthenticationException("Utilisateur non trouvé"));
+
+        // Créer la réponse
+        AuthResponse response = authMapper.mapToAuthResponse(user);
+        response.setMessage("Connexion réussie");
 
         // Générer les tokens JWT
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        response.setAccessToken(jwtService.generateToken(user));
+        response.setRefreshToken(jwtService.generateRefreshToken(user));
 
-        return AuthResponse.builder()
-                .message("Utilisateur authentifié avec succès")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .success(true)
-                .build();
+        return response;
     }
 }
