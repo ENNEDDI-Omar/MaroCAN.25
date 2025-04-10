@@ -1,12 +1,8 @@
 package com.projects.server.controller;
 
-import com.projects.server.domain.entities.Role;
-import com.projects.server.domain.enums.RoleType;
-import com.projects.server.repositories.RoleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projects.server.dto.request.LoginRequest;
 import com.projects.server.dto.request.RegisterRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -31,29 +27,6 @@ public class AuthControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @BeforeEach
-    public void setup() {
-        // Créer les rôles nécessaires s'ils n'existent pas déjà
-        if (roleRepository.findByName(RoleType.USER).isEmpty()) {
-            Role userRole = Role.builder()
-                    .name(RoleType.USER)
-                    .build();
-            roleRepository.save(userRole);
-        }
-
-        if (roleRepository.findByName(RoleType.ADMIN).isEmpty()) {
-            Role adminRole = Role.builder()
-                    .name(RoleType.ADMIN)
-                    .build();
-            roleRepository.save(adminRole);
-        }
-
-        // Ajouter d'autres rôles si nécessaire
-    }
 
     @Test
     public void registerShouldReturnTokensWhenValidRequest() throws Exception {

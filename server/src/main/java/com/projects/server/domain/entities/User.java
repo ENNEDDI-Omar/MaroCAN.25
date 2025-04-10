@@ -18,7 +18,8 @@ import java.util.Set;
  * Un utilisateur peut avoir plusieurs rôles.
  */
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
