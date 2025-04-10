@@ -28,7 +28,7 @@ public interface AuthMapper {
     // Convertir User en AuthResponse
     @Mapping(target = "accessToken", ignore = true)
     @Mapping(target = "refreshToken", ignore = true)
-    @Mapping(target = "message", constant = "Opération réussie")
+    @Mapping(target = "message", ignore = true )
     @Mapping(target = "success", constant = "true")
     AuthResponse mapToAuthResponse(User user);
 }

@@ -1,11 +1,9 @@
 package com.projects.server.security;
 
-import com.projects.server.domain.entities.Role;
 import com.projects.server.domain.enums.RoleType;
 import com.projects.server.domain.entities.User;
 import com.projects.server.exceptions.AuthenticationException;
 import com.projects.server.mapper.AuthMapper;
-import com.projects.server.repositories.RoleRepository;
 import com.projects.server.repositories.UserRepository;
 import com.projects.server.dto.request.LoginRequest;
 import com.projects.server.dto.response.AuthResponse;
@@ -17,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.Set;
 
 @Service
@@ -54,6 +51,7 @@ public class AuthenticationService {
 
         // Créer la réponse
         AuthResponse response = authMapper.mapToAuthResponse(savedUser);
+        response.setMessage("Utilisateur enregistré avec succès");
 
         // Générer les tokens JWT
         response.setAccessToken(jwtService.generateToken(savedUser));
@@ -73,17 +71,16 @@ public class AuthenticationService {
 
         // Récupérer l'utilisateur
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new AuthenticationException("Utilisateur non trouvé"));
+
+        // Créer la réponse
+        AuthResponse response = authMapper.mapToAuthResponse(user);
+        response.setMessage("Connexion réussie");
 
         // Générer les tokens JWT
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        response.setAccessToken(jwtService.generateToken(user));
+        response.setRefreshToken(jwtService.generateRefreshToken(user));
 
-        return AuthResponse.builder()
-                .message("Utilisateur authentifié avec succès")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .success(true)
-                .build();
+        return response;
     }
 }
