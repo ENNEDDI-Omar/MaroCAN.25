@@ -7,26 +7,8 @@ databaseChangeLog:
         - onFail: MARK_RAN
         - not:
             - tableExists:
-                tableName: roles, users, user_roles
+                tableName: users
       changes:
-        # Create roles table
-        - createTable:
-            tableName: roles
-            columns:
-              - column:
-                  name: id
-                  type: bigint
-                  autoIncrement: true
-                  constraints:
-                    primaryKey: true
-                    nullable: false
-              - column:
-                  name: name
-                  type: varchar(50)
-                  constraints:
-                    nullable: false
-                    unique: true
-
         # Create users table
         - createTable:
             tableName: users
@@ -60,7 +42,17 @@ databaseChangeLog:
                   constraints:
                     nullable: true
 
-        # Create user_roles junction table
+  - changeSet:
+      id: 002
+      author: omario
+      runOnChange: true
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: user_roles
+      changes:
+        # Create user_roles table for storing role enums
         - createTable:
             tableName: user_roles
             columns:
@@ -70,15 +62,15 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: role_id
-                  type: bigint
+                  name: role
+                  type: varchar(50)
                   constraints:
                     nullable: false
 
-        # Add primary key constraint to junction table
+        # Add primary key constraint
         - addPrimaryKey:
             tableName: user_roles
-            columnNames: user_id, role_id
+            columnNames: user_id, role
             constraintName: pk_user_roles
 
         # Add foreign key constraints
@@ -90,36 +82,10 @@ databaseChangeLog:
             referencedColumnNames: id
             onDelete: CASCADE
 
-        - addForeignKeyConstraint:
-            baseTableName: user_roles
-            baseColumnNames: role_id
-            constraintName: fk_user_roles_role
-            referencedTableName: roles
-            referencedColumnNames: id
-            onDelete: CASCADE
-
-        # Insert default roles
-        - insert:
-            tableName: roles
+        # Add index for better performance
+        - createIndex:
+            indexName: idx_user_roles_user_id
+            tableName: user_roles
             columns:
               - column:
-                  name: name
-                  value: USER
-        - insert:
-            tableName: roles
-            columns:
-              - column:
-                  name: name
-                  value: ADMIN
-        - insert:
-            tableName: roles
-            columns:
-              - column:
-                  name: name
-                  value: VOLONTAIRE
-        - insert:
-            tableName: roles
-            columns:
-              - column:
-                  name: name
-                  value: MEDIA
+                  name: user_id
