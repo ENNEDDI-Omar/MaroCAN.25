@@ -1,0 +1,30 @@
+<header class="bg-green-700 shadow-md">
+  <div class="container mx-auto px-4 py-3">
+    <div class="flex justify-between items-center">
+      <!-- Logo et titre -->
+      <div class="flex items-center space-x-4">
+        <a routerLink="/home" class="flex items-center">
+          <img src="assets/images/logo-can2025.png" alt="Logo CAN 2025" class="h-12">
+          <span class="text-white text-xl font-bold ml-2">MaroCAN.25</span>
+        </a>
+      </div>
+
+      <!-- Menu utilisateur -->
+      <div class="flex items-center space-x-4">
+        <div class="relative" *ngIf="authService.getUser() as user">
+          <span class="text-white mr-2">{{ user.username }}</span>
+          <button (click)="logout()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition">
+            Déconnexion
+          </button>
+        </div>
+      </div>
+
+      <!-- Bouton menu mobile -->
+      <button (click)="toggleMenu()" class="md:hidden text-white focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>

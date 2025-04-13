@@ -1,0 +1,143 @@
+<section class="contact-section py-16 bg-green-700 text-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4">Contactez-nous</h2>
+      <p class="text-lg max-w-2xl mx-auto">
+        Une question sur la CAN 2025 ? Besoin d'informations sur les billets ou les stades ? N'hésitez pas à nous contacter.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+      <!-- Informations de contact -->
+      <div class="bg-green-800 bg-opacity-50 p-8 rounded-lg">
+        <h3 class="text-2xl font-bold mb-6">Nos coordonnées</h3>
+
+        <div class="space-y-6">
+          <div class="flex items-start">
+            <div class="bg-white p-2 rounded-full mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-bold mb-1">Téléphone</h4>
+              <p>+212 5XX-XX-XX-XX</p>
+            </div>
+          </div>
+
+          <div class="flex items-start">
+            <div class="bg-white p-2 rounded-full mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-bold mb-1">Email</h4>
+              <p>contact&#64;marocan25.com</p>
+            </div>
+          </div>
+
+          <div class="flex items-start">
+            <div class="bg-white p-2 rounded-full mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-bold mb-1">Adresse</h4>
+              <p>Siège de la FRMF, Complexe Mohammed VI, Maâmora, Salé, Maroc</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulaire de contact -->
+      <div class="bg-white text-gray-800 p-8 rounded-lg shadow-lg">
+        <h3 class="text-2xl font-bold mb-6 text-green-800">Envoyez-nous un message</h3>
+
+        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+          <div class="mb-4">
+            <label for="name" class="block text-gray-700 font-medium mb-2">Nom</label>
+            <input
+              type="text"
+              id="name"
+              formControlName="name"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Votre nom"
+            >
+            <div *ngIf="contactForm.get('name')?.invalid && (contactForm.get('name')?.dirty || contactForm.get('name')?.touched || isSubmitted)" class="text-red-600 text-sm mt-1">
+              Veuillez entrer votre nom (minimum 3 caractères)
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Votre email"
+            >
+            <div *ngIf="contactForm.get('email')?.invalid && (contactForm.get('email')?.dirty || contactForm.get('email')?.touched || isSubmitted)" class="text-red-600 text-sm mt-1">
+              Veuillez entrer une adresse email valide
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="subject" class="block text-gray-700 font-medium mb-2">Sujet</label>
+            <select
+              id="subject"
+              formControlName="subject"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">Sélectionnez un sujet</option>
+              <option value="billets">Billets</option>
+              <option value="hebergement">Hébergement</option>
+              <option value="informations">Informations générales</option>
+              <option value="partenariat">Partenariat</option>
+              <option value="autre">Autre</option>
+            </select>
+            <div *ngIf="contactForm.get('subject')?.invalid && (contactForm.get('subject')?.dirty || contactForm.get('subject')?.touched || isSubmitted)" class="text-red-600 text-sm mt-1">
+              Veuillez sélectionner un sujet
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <label for="message" class="block text-gray-700 font-medium mb-2">Message</label>
+            <textarea
+              id="message"
+              formControlName="message"
+              rows="4"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Votre message"
+            ></textarea>
+            <div *ngIf="contactForm.get('message')?.invalid && (contactForm.get('message')?.dirty || contactForm.get('message')?.touched || isSubmitted)" class="text-red-600 text-sm mt-1">
+              Veuillez entrer votre message (minimum 10 caractères)
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded-lg transition"
+              [disabled]="isSubmitted && contactForm.invalid"
+            >
+              <span *ngIf="isSubmitted && contactForm.valid">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Envoi en cours...
+              </span>
+              <span *ngIf="!isSubmitted || contactForm.invalid">
+                Envoyer le message
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

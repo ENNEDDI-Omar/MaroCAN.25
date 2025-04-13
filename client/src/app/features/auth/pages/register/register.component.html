@@ -1,0 +1,117 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
+    <div class="text-center">
+      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+        Créer un compte
+      </h2>
+      <p class="mt-2 text-sm text-gray-600">
+        Ou
+        <a routerLink="/auth/login" class="font-medium text-blue-600 hover:text-blue-500">
+          connectez-vous à votre compte
+        </a>
+      </p>
+    </div>
+
+    <!-- Alert d'erreur -->
+    <div *ngIf="error$ | async as error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+      <span class="block sm:inline">{{ error }}</span>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
+      <div class="space-y-4">
+        <div>
+          <label for="username" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+          <input
+            id="username"
+            formControlName="username"
+            type="text"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Nom d'utilisateur"
+          />
+          <div *ngIf="registerForm.get('username')?.invalid && (registerForm.get('username')?.dirty || registerForm.get('username')?.touched)" class="text-red-500 text-xs mt-1">
+            <div *ngIf="registerForm.get('username')?.errors?.['required']">Le nom d'utilisateur est requis</div>
+            <div *ngIf="registerForm.get('username')?.errors?.['minlength']">Le nom d'utilisateur doit contenir au moins 6 caractères</div>
+            <div *ngIf="registerForm.get('username')?.errors?.['maxlength']">Le nom d'utilisateur ne peut pas dépasser 20 caractères</div>
+          </div>
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+          <input
+            id="email"
+            formControlName="email"
+            type="email"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Adresse email"
+          />
+          <div *ngIf="registerForm.get('email')?.invalid && (registerForm.get('email')?.dirty || registerForm.get('email')?.touched)" class="text-red-500 text-xs mt-1">
+            <div *ngIf="registerForm.get('email')?.errors?.['required']">L'email est requis</div>
+            <div *ngIf="registerForm.get('email')?.errors?.['email']">Veuillez entrer un email valide</div>
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+          <input
+            id="password"
+            formControlName="password"
+            type="password"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Mot de passe"
+          />
+          <div *ngIf="registerForm.get('password')?.invalid && (registerForm.get('password')?.dirty || registerForm.get('password')?.touched)" class="text-red-500 text-xs mt-1">
+            <div *ngIf="registerForm.get('password')?.errors?.['required']">Le mot de passe est requis</div>
+            <div *ngIf="registerForm.get('password')?.errors?.['minlength']">Le mot de passe doit contenir au moins 8 caractères</div>
+            <div *ngIf="registerForm.get('password')?.errors?.['pattern']">
+              Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
+          <input
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            type="password"
+            required
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            placeholder="Confirmer le mot de passe"
+          />
+          <div *ngIf="registerForm.get('confirmPassword')?.invalid && (registerForm.get('confirmPassword')?.dirty || registerForm.get('confirmPassword')?.touched)" class="text-red-500 text-xs mt-1">
+            <div *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">La confirmation du mot de passe est requise</div>
+          </div>
+          <div *ngIf="registerForm.errors?.['passwordMismatch'] && (registerForm.get('confirmPassword')?.touched || registerForm.get('confirmPassword')?.dirty)" class="text-red-500 text-xs mt-1">
+            Les mots de passe ne correspondent pas
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          [disabled]="registerForm.invalid || (loading$ | async)"
+          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+        >
+          <span *ngIf="loading$ | async" class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <!-- Spinner -->
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          S'inscrire
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-6 text-center">
+      <a routerLink="/" class="font-medium text-sm text-gray-600 hover:text-gray-900">
+        Retour à l'accueil
+      </a>
+    </div>
+  </div>
+</div>
