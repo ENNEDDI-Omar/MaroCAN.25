@@ -1,0 +1,25 @@
+<aside class="bg-gray-800 text-white w-64 min-h-screen flex flex-col">
+  <div class="p-4 border-b border-gray-700">
+    <h2 class="text-xl font-bold">Menu</h2>
+  </div>
+
+  <nav class="flex-grow py-4">
+    <ul>
+      <li *ngFor="let link of sidebarLinks" class="mb-1">
+        <a [routerLink]="link.route" routerLinkActive="bg-gray-700" class="flex items-center px-4 py-2 hover:bg-gray-700 transition">
+          <span class="mr-3">
+            <!-- Placeholder for icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+            </svg>
+          </span>
+          <span>{{ link.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="p-4 border-t border-gray-700 mt-auto">
+    <p class="text-sm text-gray-400">MaroCAN.25 © {{ currentYear }}</p>
+  </div>
+</aside>

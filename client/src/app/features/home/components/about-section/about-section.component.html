@@ -1,0 +1,35 @@
+<section class="about-section py-16 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">À propos de la CAN 2025</h2>
+        <p class="text-lg text-gray-700 mb-6">
+          La Coupe d'Afrique des Nations 2025 sera organisée au Maroc du 10 janvier au 10 février 2025. Cette 35ème édition rassemblera les 24 meilleures équipes nationales africaines pour un mois de compétition intense.
+        </p>
+        <p class="text-lg text-gray-700 mb-6">
+          Le Maroc accueillera cet événement majeur dans six villes hôtes: Casablanca, Rabat, Tanger, Marrakech, Agadir et Fès, avec des infrastructures modernisées pour offrir un spectacle inoubliable aux fans.
+        </p>
+        <p class="text-lg text-gray-700 mb-6">
+          Cette compétition mettra en valeur les talents exceptionnels du football africain et sera une célébration de la diversité et de la richesse culturelle du continent.
+        </p>
+      </div>
+
+      <div>
+        <div class="bg-green-100 rounded-lg p-6 shadow-md">
+          <h3 class="text-2xl font-bold mb-4 text-green-800">Dates Clés</h3>
+          <ul class="space-y-4">
+            <li *ngFor="let item of keyDates" class="border-b border-green-200 pb-3 last:border-0">
+              <div class="flex items-center">
+                <div class="bg-green-700 text-white rounded-full w-3 h-3 mr-3"></div>
+                <div>
+                  <span class="block font-bold text-green-800">{{ item.date }}</span>
+                  <span class="text-gray-700">{{ item.event }}</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
