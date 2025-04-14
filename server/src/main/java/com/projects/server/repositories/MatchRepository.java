@@ -16,5 +16,11 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     List<Match> findByPhaseOrderByDateTimeAsc(CompetitionPhaseType phase);
 
-    List<Match> findByGroupOrderByDateTimeAsc(GroupType group);
+    // Méthode pour vérifier si les matchs d'une phase sont déjà initialisés
+    boolean existsByPhase(CompetitionPhaseType phase);
+
+    // Méthode pour récupérer les matchs par phase
+    List<Match> findByPhase(CompetitionPhaseType phase);
+
+    List<Match> findByMatchGroupOrderByDateTimeAsc(GroupType groupType);
 }

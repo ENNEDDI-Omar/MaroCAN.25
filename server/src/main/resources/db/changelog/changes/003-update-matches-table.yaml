@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-update-matches-table
+      author: omario
+      comment: Renommer la colonne 'group' en 'match_group' pour éviter le conflit avec le mot-clé SQL
+      changes:
+        - renameColumn:
+            tableName: matches
+            oldColumnName: group
+            newColumnName: match_group
+            columnDataType: VARCHAR(255)
