@@ -50,6 +50,9 @@ public class User implements UserDetails
     @Column(nullable = true)
     private String profileImageUrl;
 
+    @OneToMany(mappedBy = "user")
+    private Set<TicketOrder> orders = new HashSet<>();
+
 
 
     @Override

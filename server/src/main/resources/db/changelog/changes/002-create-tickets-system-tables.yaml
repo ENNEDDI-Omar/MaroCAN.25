@@ -1,0 +1,205 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-tickets-system-tables
+      author: omario
+      comment: Création des tables pour le système de billetterie
+      changes:
+        # Table des matchs
+        - createTable:
+            tableName: matches
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: date_time
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stadium
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: home_team
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: away_team
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phase
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: group
+                  type: VARCHAR(255)
+              - column:
+                  name: match_score
+                  type: INTEGER
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+
+        # Table des billets disponibles par match et section
+        - createTable:
+            tableName: match_available_tickets
+            columns:
+              - column:
+                  name: match_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: section_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: available_tickets
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: match_available_tickets
+            columnNames: match_id, section_type
+            constraintName: pk_match_available_tickets
+
+        - addForeignKeyConstraint:
+            baseTableName: match_available_tickets
+            baseColumnNames: match_id
+            referencedTableName: matches
+            referencedColumnNames: id
+            constraintName: fk_match_available_tickets_match
+
+        # Table des commandes de billets
+        - createTable:
+            tableName: ticket_orders
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_reference
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: payment_status
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_reference
+                  type: VARCHAR(255)
+              - column:
+                  name: payment_date
+                  type: TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: ticket_orders
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_ticket_orders_user
+
+        # Table des billets
+        - createTable:
+            tableName: tickets
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: ticket_code
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: match_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: section_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: BIGINT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: reservation_time
+                  type: TIMESTAMP
+              - column:
+                  name: expiration_time
+                  type: TIMESTAMP
+
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: match_id
+            referencedTableName: matches
+            referencedColumnNames: id
+            constraintName: fk_tickets_match
+
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: order_id
+            referencedTableName: ticket_orders
+            referencedColumnNames: id
+            constraintName: fk_tickets_order

@@ -15,7 +15,7 @@ public interface AuthMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "roles", ignore = true) // Géré manuellement via @AfterMapping
     @Mapping(target = "profileImageUrl", ignore = true)
-    @Mapping(target = "password", ignore = true) // Le mot de passe doit être encodé séparément
+    @Mapping(target = "password", ignore = true)
     User mapToUser(RegisterRequest request);
 
     // Configurer des valeurs après le mapping
