@@ -3,3 +3,5 @@ databaseChangeLog:
      file: db/changelog/changes/001-create-users-roles.yaml
   - include:
      file: db/changelog/changes/002-create-tickets-system-tables.yaml
+  - include:
+     file: db/changelog/changes/003-update-matches-table.yaml

@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
+@Data
 @Getter
 @Setter
 @Builder
@@ -43,7 +43,8 @@ public class Match {
     private CompetitionPhaseType phase;
 
     @Enumerated(EnumType.STRING)
-    private GroupType group;
+    @Column(name = "match_group")
+    private GroupType matchGroup;
 
     private Integer matchScore;
 
@@ -73,21 +74,26 @@ public class Match {
 
     @PrePersist
     public void prePersist() {
+        // Initialiser availableTickets s'il est null
+        if (this.availableTickets == null) {
+            this.availableTickets = new HashMap<>();
+        }
+
         // Initialiser le nombre de billets disponibles pour chaque section
-        if (availableTickets.isEmpty() && stadium != null) {
-            for (SectionType sectionType : SectionType.values()) {
-                availableTickets.put(sectionType, stadium.getCapacityForSection(sectionType));
+        for (SectionType sectionType : SectionType.values()) {
+            if (!availableTickets.containsKey(sectionType)) {
+                availableTickets.put(sectionType, getStadium().getCapacityForSection(sectionType));
             }
         }
 
         // Déterminer automatiquement le groupe si c'est un match de phase de groupe
-        if (phase == CompetitionPhaseType.GROUP_STAGE && group == null) {
+        if (phase == CompetitionPhaseType.GROUP_STAGE && matchGroup == null) {
             // Vérifier si les deux équipes appartiennent au même groupe
             GroupType homeTeamGroup = GroupType.getGroupForTeam(homeTeam);
             GroupType awayTeamGroup = GroupType.getGroupForTeam(awayTeam);
 
             if (homeTeamGroup != null && homeTeamGroup == awayTeamGroup) {
-                group = homeTeamGroup;
+                matchGroup = homeTeamGroup;
             }
         }
     }

@@ -62,7 +62,7 @@ public class MatchServiceImpl implements MatchService {
     @Transactional(readOnly = true)
     public List<MatchResponse> getMatchesByGroup(String group) {
         GroupType groupType = GroupType.valueOf(group);
-        List<Match> matches = matchRepository.findByGroupOrderByDateTimeAsc(groupType);
+        List<Match> matches = matchRepository.findByMatchGroupOrderByDateTimeAsc(groupType);  // Nom de méthode mis à jour
         return matches.stream()
                 .map(matchMapper::toResponse)
                 .collect(Collectors.toList());
