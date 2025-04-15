@@ -14,13 +14,17 @@ import com.projects.server.dto.response.PaymentInitResponse;
 import com.projects.server.dto.response.TicketResponse;
 import com.projects.server.exceptions.ResourceNotFoundException;
 import com.projects.server.exceptions.AuthenticationException;
+import com.projects.server.exceptions.PaymentException;
 import com.projects.server.mapper.TicketMapper;
 import com.projects.server.repositories.MatchRepository;
 import com.projects.server.repositories.TicketOrderRepository;
 import com.projects.server.repositories.TicketRepository;
 import com.projects.server.repositories.UserRepository;
+import com.projects.server.services.TicketDeliveryService;
+import com.projects.server.services.interfaces.PaymentService;
 import com.projects.server.services.interfaces.ReservationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +37,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationServiceImpl implements ReservationService {
 
     private final TicketRepository ticketRepository;
@@ -40,6 +45,8 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final TicketOrderRepository ticketOrderRepository;
     private final TicketMapper ticketMapper;
+    private final PaymentService paymentService;
+    private final TicketDeliveryService ticketDeliveryService;
 
     // Durée de réservation en minutes
     private static final int RESERVATION_DURATION_MINUTES = 30;
@@ -51,68 +58,64 @@ public class ReservationServiceImpl implements ReservationService {
         Match match = matchRepository.findById(request.getMatchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Match non trouvé avec l'id: " + request.getMatchId()));
 
-        // Vérifier la disponibilité des billets
-        List<Ticket> availableTickets = ticketRepository.findByMatchAndSectionTypeAndStatus(
-                match, request.getSectionType(), TicketStatusType.AVAILABLE);
+        // Vérifier que l'utilisateur n'a pas déjà réservé ou acheté plus que le maximum autorisé
+        int alreadyReservedOrPurchased = ticketRepository.countByMatchAndUserEmail(match.getId(), userEmail);
 
-        if (availableTickets.size() < request.getQuantity()) {
-            throw new IllegalStateException("Nombre insuffisant de billets disponibles");
+        if (alreadyReservedOrPurchased + request.getQuantity() > 5) {
+            throw new IllegalArgumentException("Vous ne pouvez pas réserver plus de 5 billets par match. Vous avez déjà " +
+                    alreadyReservedOrPurchased + " billets pour ce match.");
         }
 
-        // Sélectionner les billets à réserver
-        List<Ticket> ticketsToReserve = availableTickets.subList(0, request.getQuantity());
+        // Vérifier si suffisamment de billets sont disponibles
+        Map<SectionType, Integer> availableTicketsMap = match.getAvailableTickets();
+        Integer currentAvailable = availableTicketsMap.getOrDefault(request.getSectionType(), 0);
+
+        if (currentAvailable < request.getQuantity()) {
+            throw new IllegalStateException("Nombre insuffisant de billets disponibles pour cette section");
+        }
+
+        // Créer les tickets (approche sans générer tous les tickets à l'avance)
+        List<Ticket> reservedTickets = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expirationTime = now.plusMinutes(RESERVATION_DURATION_MINUTES);
+        double ticketPrice = match.getPriceForSection(request.getSectionType());
 
-        // Mettre à jour le statut des billets
-        for (Ticket ticket : ticketsToReserve) {
-            ticket.setStatus(TicketStatusType.RESERVED);
-            ticket.setReservationTime(now);
-            ticket.setExpirationTime(expirationTime);
+        for (int i = 0; i < request.getQuantity(); i++) {
+            Ticket ticket = Ticket.builder()
+                    .match(match)
+                    .sectionType(request.getSectionType())
+                    .price(ticketPrice)
+                    .status(TicketStatusType.RESERVED)
+                    .reservationTime(now)
+                    .expirationTime(expirationTime)
+                    .ticketCode(generateTicketCode(match, request.getSectionType()))
+                    .build();
+
+            reservedTickets.add(ticket);
         }
 
-        ticketsToReserve = ticketRepository.saveAll(ticketsToReserve);
+        // Sauvegarder les tickets
+        reservedTickets = ticketRepository.saveAll(reservedTickets);
 
         // Mettre à jour le compteur de billets disponibles
-        Map<SectionType, Integer> availableTicketsMap = match.getAvailableTickets();
-        int currentAvailable = availableTicketsMap.getOrDefault(request.getSectionType(), 0);
         availableTicketsMap.put(request.getSectionType(), currentAvailable - request.getQuantity());
         matchRepository.save(match);
 
-        return ticketsToReserve.stream()
+        return reservedTickets.stream()
                 .map(ticketMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public PaymentInitResponse initiatePayment(TicketPurchaseRequest request, String userEmail) {
-        return null;
-    }
-
-    @Override
-    public OrderResponse completePayment(String sessionId, String userEmail) {
-        return null;
-    }
-
-    @Override
     @Transactional
-    public OrderResponse purchaseTickets(TicketPurchaseRequest request, String userEmail) {
+    public PaymentInitResponse initiatePayment(TicketPurchaseRequest request, String userEmail) {
         User user = getUserByEmail(userEmail);
 
         // Récupérer les billets réservés
         List<Ticket> tickets = ticketRepository.findAllById(request.getTicketIds());
 
-        // Vérifier que tous les billets sont réservés
-        for (Ticket ticket : tickets) {
-            if (ticket.getStatus() != TicketStatusType.RESERVED) {
-                throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " n'est pas réservé");
-            }
-
-            // Vérifier que la réservation n'a pas expiré
-            if (ticket.getExpirationTime().isBefore(LocalDateTime.now())) {
-                throw new IllegalStateException("La réservation du billet avec l'id " + ticket.getId() + " a expiré");
-            }
-        }
+        // Vérifications
+        validateTicketsForPurchase(tickets);
 
         // Créer une commande
         TicketOrder order = TicketOrder.builder()
@@ -125,34 +128,69 @@ public class ReservationServiceImpl implements ReservationService {
         // Associer les billets à la commande et calculer le montant total
         for (Ticket ticket : tickets) {
             order.addTicket(ticket);
-            ticket.setStatus(TicketStatusType.SOLD);
         }
 
         order.calculateTotalAmount();
 
-        // Simuler le processus de paiement
-        // Dans un système réel, vous intégreriez ici une passerelle de paiement
-        boolean paymentSuccess = processPayment(order, request.getPaymentInfo());
-
-        if (paymentSuccess) {
-            order.setPaymentStatus(PaymentStatusType.COMPLETED);
-            order.setPaymentDate(LocalDateTime.now());
-            order.setPaymentReference("PAY-" + UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8).toUpperCase());
-        } else {
-            order.setPaymentStatus(PaymentStatusType.FAILED);
-            // Remettre les billets en disponible
-            for (Ticket ticket : tickets) {
-                ticket.setStatus(TicketStatusType.AVAILABLE);
-                ticket.setReservationTime(null);
-                ticket.setExpirationTime(null);
-                ticket.setOrder(null);
-            }
-            throw new IllegalStateException("Le paiement a échoué");
-        }
-
+        // Sauvegarder la commande
         order = ticketOrderRepository.save(order);
 
-        // Créer la réponse
+        log.info("Commande créée: {} pour l'utilisateur: {} avec {} billets pour un montant de {} MAD",
+                order.getOrderReference(), userEmail, tickets.size(), order.getTotalAmount());
+
+        try {
+            // Initialiser le paiement avec Stripe
+            return paymentService.initiatePayment(order);
+        } catch (Exception e) {
+            // En cas d'erreur, annuler la commande et libérer les billets
+            rollbackOrder(order);
+            throw new PaymentException("Erreur lors de l'initialisation du paiement: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse completePayment(String sessionId, String userEmail) {
+        // Récupérer la commande associée à cette session
+        TicketOrder order = ticketOrderRepository.findByPaymentReference(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée pour la session: " + sessionId));
+
+        // Vérifier que la commande appartient à l'utilisateur
+        if (!order.getUser().getEmail().equals(userEmail)) {
+            throw new AuthenticationException("Vous n'êtes pas autorisé à accéder à cette commande");
+        }
+
+        // Si la commande est déjà complétée ou échouée, retourner directement
+        if (order.getPaymentStatus() == PaymentStatusType.COMPLETED ||
+                order.getPaymentStatus() == PaymentStatusType.FAILED) {
+            return mapToOrderResponse(order);
+        }
+
+        try {
+            // Vérifier le statut du paiement avec Stripe
+            PaymentStatusType paymentStatus = paymentService.checkPaymentStatus(sessionId);
+
+            if (paymentStatus == PaymentStatusType.COMPLETED) {
+                // Paiement réussi
+                completeSuccessfulPayment(order);
+                // Envoyer les billets par email
+                ticketDeliveryService.deliverTickets(order);
+                log.info("Paiement réussi et billets envoyés pour la commande: {}", order.getOrderReference());
+            } else if (paymentStatus == PaymentStatusType.FAILED) {
+                // Paiement échoué
+                failPayment(order);
+                log.info("Paiement échoué pour la commande: {}", order.getOrderReference());
+            }
+            // Si pending, on ne fait rien
+
+            // Sauvegarder les changements
+            order = ticketOrderRepository.save(order);
+
+        } catch (Exception e) {
+            log.error("Erreur lors de la vérification du paiement: {}", e.getMessage());
+            throw new PaymentException("Erreur lors de la vérification du paiement: " + e.getMessage(), e);
+        }
+
         return mapToOrderResponse(order);
     }
 
@@ -186,12 +224,16 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public void cancelReservation(List<Long> ticketIds, String userEmail) {
         User user = getUserByEmail(userEmail);
-
         List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
 
         for (Ticket ticket : tickets) {
             if (ticket.getStatus() != TicketStatusType.RESERVED) {
                 throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " n'est pas réservé");
+            }
+
+            // Vérifier que le billet n'appartient pas à une commande
+            if (ticket.getOrder() != null) {
+                throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " fait partie d'une commande");
             }
 
             ticket.setStatus(TicketStatusType.AVAILABLE);
@@ -209,6 +251,79 @@ public class ReservationServiceImpl implements ReservationService {
             availableTicketsMap.put(ticket.getSectionType(), currentAvailable + 1);
             matchRepository.save(match);
         }
+
+        log.info("Réservation annulée pour {} billets par l'utilisateur: {}", tickets.size(), userEmail);
+    }
+
+    // Méthodes privées utilitaires
+
+    private void validateTicketsForPurchase(List<Ticket> tickets) {
+        if (tickets.isEmpty()) {
+            throw new IllegalArgumentException("Aucun billet trouvé pour l'achat");
+        }
+
+        for (Ticket ticket : tickets) {
+            if (ticket.getStatus() != TicketStatusType.RESERVED) {
+                throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " n'est pas réservé");
+            }
+
+            // Vérifier que la réservation n'a pas expiré
+            if (ticket.getExpirationTime().isBefore(LocalDateTime.now())) {
+                throw new IllegalStateException("La réservation du billet avec l'id " + ticket.getId() + " a expiré");
+            }
+
+            // Vérifier que le billet n'est pas déjà dans une commande
+            if (ticket.getOrder() != null) {
+                throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " est déjà associé à une commande");
+            }
+        }
+    }
+
+    private void completeSuccessfulPayment(TicketOrder order) {
+        order.setPaymentStatus(PaymentStatusType.COMPLETED);
+        order.setPaymentDate(LocalDateTime.now());
+
+        // Mettre à jour le statut des billets
+        for (Ticket ticket : order.getTickets()) {
+            ticket.setStatus(TicketStatusType.SOLD);
+            ticket.setReservationTime(null);
+            ticket.setExpirationTime(null);
+        }
+
+        ticketRepository.saveAll(order.getTickets());
+    }
+
+    private void failPayment(TicketOrder order) {
+        order.setPaymentStatus(PaymentStatusType.FAILED);
+
+        // Libérer les billets
+        releaseTickets(order.getTickets());
+    }
+
+    private void rollbackOrder(TicketOrder order) {
+        // Supprimer la commande
+        ticketOrderRepository.delete(order);
+
+        // Libérer les billets
+        releaseTickets(order.getTickets());
+    }
+
+    private void releaseTickets(List<Ticket> tickets) {
+        for (Ticket ticket : tickets) {
+            ticket.setStatus(TicketStatusType.AVAILABLE);
+            ticket.setReservationTime(null);
+            ticket.setExpirationTime(null);
+            ticket.setOrder(null);
+
+            // Mettre à jour le compteur de billets disponibles
+            Match match = ticket.getMatch();
+            Map<SectionType, Integer> availableTicketsMap = match.getAvailableTickets();
+            int currentAvailable = availableTicketsMap.getOrDefault(ticket.getSectionType(), 0);
+            availableTicketsMap.put(ticket.getSectionType(), currentAvailable + 1);
+            matchRepository.save(match);
+        }
+
+        ticketRepository.saveAll(tickets);
     }
 
     private OrderResponse mapToOrderResponse(TicketOrder order) {
@@ -233,9 +348,9 @@ public class ReservationServiceImpl implements ReservationService {
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email: " + email));
     }
 
-    private boolean processPayment(TicketOrder order, String paymentInfo) {
-        // Simulation d'un processus de paiement
-        // Dans un système réel, vous intégreriez ici une passerelle de paiement
-        return true;
+    private String generateTicketCode(Match match, SectionType sectionType) {
+        return "CAN25-" + match.getId() + "-" +
+                sectionType.name().charAt(0) + "-" +
+                UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }

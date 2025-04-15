@@ -1,6 +1,7 @@
 package com.projects.server.dto.request;
 
 import com.projects.server.domain.enums.SectionType;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,5 +23,6 @@ public class TicketReservationRequest {
 
     @NotNull(message = "Le nombre de billets est requis")
     @Min(value = 1, message = "Le nombre de billets doit être au moins 1")
+    @Max(value = 5, message = "Vous ne pouvez pas réserver plus de 5 billets à la fois")
     private Integer quantity;
 }

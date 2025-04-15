@@ -16,8 +16,6 @@ public interface ReservationService {
 
     OrderResponse completePayment(String sessionId, String userEmail);
 
-    OrderResponse purchaseTickets(TicketPurchaseRequest request, String userEmail);
-
     List<OrderResponse> getUserOrders(String userEmail);
 
     OrderResponse getOrderById(Long orderId, String userEmail);
