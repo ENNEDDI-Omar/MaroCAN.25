@@ -38,7 +38,7 @@ public class MatchController {
 
     /**
      * Récupère les matchs par phase de compétition
-     * @param phase Phase de compétition (ex: GROUP_STAGE, ROUND_OF_16, etc.)
+     * @param phase Phase de compétition (ex : GROUP_STAGE, ROUND_OF_16, etc.)
      * @return Liste des matchs de la phase spécifiée
      */
     @GetMapping("/phase/{phase}")

@@ -31,7 +31,7 @@ public class TicketController {
     }
 
     /**
-     * Récupère les détails d'un match spécifique
+     * Récupère les détails d'un match spécifique par son ID
      * @param id ID du match
      * @return Détails du match
      */
