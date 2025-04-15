@@ -10,6 +10,7 @@ import com.projects.server.domain.enums.TicketStatusType;
 import com.projects.server.dto.request.TicketPurchaseRequest;
 import com.projects.server.dto.request.TicketReservationRequest;
 import com.projects.server.dto.response.OrderResponse;
+import com.projects.server.dto.response.PaymentInitResponse;
 import com.projects.server.dto.response.TicketResponse;
 import com.projects.server.exceptions.ResourceNotFoundException;
 import com.projects.server.exceptions.AuthenticationException;
@@ -81,6 +82,16 @@ public class ReservationServiceImpl implements ReservationService {
         return ticketsToReserve.stream()
                 .map(ticketMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PaymentInitResponse initiatePayment(TicketPurchaseRequest request, String userEmail) {
+        return null;
+    }
+
+    @Override
+    public OrderResponse completePayment(String sessionId, String userEmail) {
+        return null;
     }
 
     @Override
