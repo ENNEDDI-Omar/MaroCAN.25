@@ -17,7 +17,4 @@ public class TicketPurchaseRequest {
 
     @NotEmpty(message = "La liste des identifiants de billets est requise")
     private List<Long> ticketIds;
-
-    @NotBlank(message = "Les informations de paiement sont requises")
-    private String paymentInfo;
 }
