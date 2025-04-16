@@ -48,6 +48,7 @@ public class TicketOrder {
 
     private LocalDateTime paymentDate;
 
+    @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ticket> tickets = new ArrayList<>();
 
