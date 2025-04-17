@@ -27,10 +27,6 @@ public class TicketOrder {
     @Column(nullable = false, unique = true)
     private String orderReference;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -47,6 +43,10 @@ public class TicketOrder {
     private String paymentReference;
 
     private LocalDateTime paymentDate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Builder.Default
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
