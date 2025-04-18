@@ -23,7 +23,8 @@ public interface MatchMapper {
     Match toEntity(MatchCreateRequest request);
 
     @Mapping(target = "matchTitle", expression = "java(match.getMatchTitle())")
-    @Mapping(target = "sectionPrices", source = "match", qualifiedByName = "calculateSectionPrices")
+    @Mapping(target = "sectionPrices", source = ".", qualifiedByName = "calculateSectionPrices")
+    @Mapping(target = "group", source = "matchGroup")
     MatchResponse toResponse(Match match);
 
     @Named("calculateSectionPrices")
