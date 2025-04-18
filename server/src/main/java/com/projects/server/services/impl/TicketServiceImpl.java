@@ -46,7 +46,7 @@ public class TicketServiceImpl implements TicketService {
         availableTickets.put(request.getSectionType(), currentAvailable - request.getNumberOfTickets());
         matchRepository.save(match);
 
-        // Générer les billets
+
         List<Ticket> tickets = new ArrayList<>();
         double price = match.getPriceForSection(request.getSectionType());
 
