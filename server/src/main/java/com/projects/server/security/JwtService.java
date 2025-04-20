@@ -1,5 +1,6 @@
 package com.projects.server.security;
 
+import com.projects.server.domain.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -37,7 +38,18 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> extraClaims = new HashMap<>();
+
+        if (userDetails instanceof User) {
+            User user = (User) userDetails;
+            extraClaims.put("username", user.getUsername());
+            extraClaims.put("email", user.getEmail());
+            extraClaims.put("roles", user.getRoles().stream()
+                    .map(Enum::name)
+                    .toList());
+        }
+
+        return generateToken(extraClaims, userDetails);
     }
 
     public String generateToken(
@@ -58,10 +70,18 @@ public class JwtService {
             UserDetails userDetails,
             long expiration
     ) {
+
+        String subject;
+        if (userDetails instanceof User) {
+            subject = ((User) userDetails).getEmail();
+        } else {
+            subject = userDetails.getUsername();
+        }
+
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
@@ -69,8 +89,14 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        final String emailFromToken = extractUsername(token);
+
+        // Comparer avec l'email plutôt qu'avec le username
+        String userEmail = userDetails instanceof User ?
+                ((User) userDetails).getEmail() :
+                userDetails.getUsername();
+
+        return (emailFromToken.equals(userEmail)) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

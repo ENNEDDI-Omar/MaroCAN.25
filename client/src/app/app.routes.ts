@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { LandingPageComponent } from './features/landing-page/landing-page/landing-page.component';
 import { authGuard } from './core/guards/auth.guard';
+import {RoleGuard} from "./core/guards/role.guard";
 
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
@@ -15,7 +16,8 @@ export const routes: Routes = [
       },
       {
         path: 'tickets',
-        canActivate: [authGuard],
+        canActivate: [authGuard, RoleGuard],
+        data: { roles: ['USER', 'ADMIN'] },
         loadChildren: () => import('./features/tickets/tickets.module').then(m => m.TicketsModule)
       }
     ]

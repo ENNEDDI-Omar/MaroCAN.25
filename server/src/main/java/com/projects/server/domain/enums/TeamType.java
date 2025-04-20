@@ -43,6 +43,6 @@ public enum TeamType {
     }
 
     public String getFlagUrl() {
-        return "/assets/images/flags/" + this.name().toLowerCase() + ".png";
+        return "/assets/images/flags/" + this.countryCode.toLowerCase() + ".png";
     }
 }

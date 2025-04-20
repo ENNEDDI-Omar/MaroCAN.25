@@ -1,6 +1,7 @@
 package com.projects.server.controllers;
 
 import com.projects.server.dto.request.LoginRequest;
+import com.projects.server.dto.request.RefreshTokenRequest;
 import com.projects.server.dto.response.AuthResponse;
 import com.projects.server.security.AuthenticationService;
 import com.projects.server.dto.request.RegisterRequest;
@@ -44,6 +45,16 @@ public class AuthenticationController {
             return ResponseEntity.ok(authenticationService.authenticate(request));
         } catch (Exception e) {
             log.error("Erreur de Connexion: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        try {
+            return ResponseEntity.ok(authenticationService.refreshToken(request.getRefreshToken()));
+        } catch (Exception e) {
+            log.error("Erreur de rafraîchissement du token: {}", e.getMessage());
             throw e;
         }
     }

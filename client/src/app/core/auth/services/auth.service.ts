@@ -1,131 +1,219 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import {Observable, BehaviorSubject, throwError, finalize} from 'rxjs';
+import { tap, catchError, switchMap} from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import {
-    AuthResponse,
-    LoginRequest,
-    RegisterRequest,
-    User
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  User
 } from '../../../features/auth/models/auth.model';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = `${environment.apiUrl}/auth`;
+  private apiUrl = `${environment.apiUrl}/auth`;
 
-    // Pour remplacer le store, utilisez des BehaviorSubject
-    private currentUserSubject = new BehaviorSubject<User | null>(null);
-    private loadingSubject = new BehaviorSubject<boolean>(false);
-    private errorSubject = new BehaviorSubject<string | null>(null);
 
-    // Exposez les observables pour les composants
-    currentUser$ = this.currentUserSubject.asObservable();
-    loading$ = this.loadingSubject.asObservable();
-    error$ = this.errorSubject.asObservable();
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  private errorSubject = new BehaviorSubject<string | null>(null);
+  private refreshingToken = false;
+  private refreshTokenTimeout: any;
 
-    constructor(private http: HttpClient, private router: Router) {
-        // Charger l'utilisateur depuis le localStorage au démarrage
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            this.currentUserSubject.next(JSON.parse(userStr));
-        }
+  currentUser$ = this.currentUserSubject.asObservable();
+  loading$ = this.loadingSubject.asObservable();
+  error$ = this.errorSubject.asObservable();
+
+  constructor(private http: HttpClient, private router: Router) {
+    // Charger l'utilisateur depuis le localStorage au démarrage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.currentUserSubject.next(JSON.parse(userStr));
     }
 
-    login(loginRequest: LoginRequest): Observable<AuthResponse> {
-        this.loadingSubject.next(true);
-        this.errorSubject.next(null);
+    // Démarrer le timer de rafraîchissement du token
+    this.startRefreshTokenTimer();
+  }
 
-        return this.http.post<AuthResponse>(`${this.apiUrl}/login`, loginRequest)
-            .pipe(
-                tap({
-                    next: (response) => {
-                        this.saveTokens(response.accessToken, response.refreshToken);
-                        const user = this.getUserFromToken(response.accessToken);
-                        this.saveUser(user);
-                        this.currentUserSubject.next(user);
-                        this.loadingSubject.next(false);
-                        this.router.navigate(['/home']);
-                    },
-                    error: (error) => {
-                        const errorMessage = error.error?.message || 'Échec de connexion. Veuillez réessayer.';
-                        this.errorSubject.next(errorMessage);
-                        this.loadingSubject.next(false);
-                    }
-                })
-            );
+  login(loginRequest: LoginRequest): Observable<AuthResponse> {
+    this.loadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, loginRequest)
+      .pipe(
+        tap({
+          next: (response) => {
+            this.saveTokens(response.accessToken, response.refreshToken);
+            const user = this.getUserFromToken(response.accessToken);
+            this.saveUser(user);
+            this.currentUserSubject.next(user);
+            this.loadingSubject.next(false);
+            this.startRefreshTokenTimer();
+            this.router.navigate(['/home']);
+          },
+          error: (error) => {
+            const errorMessage = error.error?.message || 'Échec de connexion. Veuillez réessayer.';
+            this.errorSubject.next(errorMessage);
+            this.loadingSubject.next(false);
+          }
+        })
+      );
+  }
+
+  register(registerRequest: RegisterRequest): Observable<AuthResponse> {
+    this.loadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, registerRequest)
+      .pipe(
+        tap({
+          next: (response) => {
+            this.saveTokens(response.accessToken, response.refreshToken);
+            const user = this.getUserFromToken(response.accessToken);
+            this.saveUser(user);
+            this.currentUserSubject.next(user);
+            this.loadingSubject.next(false);
+            this.startRefreshTokenTimer();
+            this.router.navigate(['/home']);
+          },
+          error: (error) => {
+            const errorMessage = error.error?.message || 'Échec d\'inscription. Veuillez réessayer.';
+            this.errorSubject.next(errorMessage);
+            this.loadingSubject.next(false);
+          }
+        })
+      );
+  }
+
+  refreshToken(): Observable<AuthResponse> {
+    if (this.refreshingToken) {
+      return throwError(() => new Error('Refresh already in progress'));
     }
 
-    register(registerRequest: RegisterRequest): Observable<AuthResponse> {
-        this.loadingSubject.next(true);
-        this.errorSubject.next(null);
+    const refreshToken = this.getRefreshToken();
 
-        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, registerRequest)
-            .pipe(
-                tap({
-                    next: (response) => {
-                        this.saveTokens(response.accessToken, response.refreshToken);
-                        const user = this.getUserFromToken(response.accessToken);
-                        this.saveUser(user);
-                        this.currentUserSubject.next(user);
-                        this.loadingSubject.next(false);
-                        this.router.navigate(['/home']);
-                    },
-                    error: (error) => {
-                        const errorMessage = error.error?.message || 'Échec d\'inscription. Veuillez réessayer.';
-                        this.errorSubject.next(errorMessage);
-                        this.loadingSubject.next(false);
-                    }
-                })
-            );
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
     }
 
-    logout(): void {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/auth/login']);
+    this.refreshingToken = true;
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, { refreshToken })
+      .pipe(
+        tap(response => {
+          this.saveTokens(response.accessToken, response.refreshToken);
+          const user = this.getUserFromToken(response.accessToken);
+          this.saveUser(user);
+          this.currentUserSubject.next(user);
+          this.startRefreshTokenTimer();
+        }),
+        catchError(error => {
+          this.logout();
+          return throwError(() => error);
+        }),
+        finalize(() => {
+          this.refreshingToken = false;
+        })
+      );
+  }
+
+  logout(): void {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    this.currentUserSubject.next(null);
+    this.stopRefreshTokenTimer();
+    this.router.navigate(['/auth/login']);
+  }
+
+  clearError(): void {
+    this.errorSubject.next(null);
+  }
+
+  saveTokens(accessToken: string, refreshToken: string): void {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+  }
+
+  saveUser(user: User): void {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+
+  getAccessToken(): string | null {
+    return localStorage.getItem('accessToken');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
+  getUser(): User | null {
+    return this.currentUserSubject.value;
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getAccessToken();
+  }
+
+  getUserFromToken(token: string): User {
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+
+    return {
+      username: tokenPayload.username || tokenPayload.sub,
+      email: tokenPayload.email || tokenPayload.sub,
+      roles: tokenPayload.roles || []
+    };
+  }
+
+  hasRole(role: string): boolean {
+    const user = this.getUser();
+    return user?.roles?.includes(role) || false;
+  }
+
+  hasAnyRole(roles: string[]): boolean {
+    const user = this.getUser();
+    return user?.roles?.some(role => roles.includes(role)) || false;
+  }
+
+  private startRefreshTokenTimer() {
+    // Arrêter le timer existant
+    this.stopRefreshTokenTimer();
+
+    // Obtenir le token d'accès
+    const accessToken = this.getAccessToken();
+    if (!accessToken) {
+      return;
     }
 
-    clearError(): void {
-        this.errorSubject.next(null);
-    }
+    try {
+      // Décoder le token pour obtenir sa date d'expiration
+      const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
+      const expires = new Date(tokenPayload.exp * 1000);
 
-    saveTokens(accessToken: string, refreshToken: string): void {
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-    }
+      // Définir le délai à 5 minutes avant l'expiration
+      const timeout = expires.getTime() - Date.now() - (5 * 60 * 1000);
 
-    saveUser(user: User): void {
-        localStorage.setItem('user', JSON.stringify(user));
-    }
+      // Ne pas planifier si le token expire dans moins de 30 secondes
+      if (timeout <= 30000) {
+        return;
+      }
 
-    getAccessToken(): string | null {
-        return localStorage.getItem('accessToken');
+      // Planifier le rafraîchissement
+      this.refreshTokenTimeout = setTimeout(() => {
+        this.refreshToken().subscribe();
+      }, timeout);
+    } catch (e) {
+      console.error('Erreur lors du décodage du token', e);
     }
+  }
 
-    getRefreshToken(): string | null {
-        return localStorage.getItem('refreshToken');
+  private stopRefreshTokenTimer() {
+    if (this.refreshTokenTimeout) {
+      clearTimeout(this.refreshTokenTimeout);
     }
-
-    getUser(): User | null {
-        return this.currentUserSubject.value;
-    }
-
-    isLoggedIn(): boolean {
-        return !!this.getAccessToken();
-    }
-
-    getUserFromToken(token: string): User {
-        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-
-        return {
-            email: tokenPayload.sub,
-            username: tokenPayload.username || tokenPayload.sub.split('@')[0]
-        };
-    }
+  }
 }

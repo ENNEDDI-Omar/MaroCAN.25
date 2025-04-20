@@ -32,7 +32,7 @@ public class User implements UserDetails
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false, unique = true)
@@ -59,14 +59,14 @@ public class User implements UserDetails
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         for (RoleType role : roles) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+            authorities.add(new SimpleGrantedAuthority(role.name()));
         }
         return authorities;
     }
 
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
 

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import {AuthService} from "../../core/auth/services/auth.service";
 
 @Component({
   selector: 'app-navbar',
@@ -6,6 +7,9 @@ import { Component } from '@angular/core';
   styleUrls: []
 })
 export class NavbarComponent {
+
+  constructor(public authService: AuthService) {}
+
   navItems = [
     { label: 'Accueil', route: '/home' },
     { label: 'Matchs', route: '/matches' },

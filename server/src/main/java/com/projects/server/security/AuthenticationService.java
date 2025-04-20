@@ -83,4 +83,35 @@ public class AuthenticationService {
 
         return response;
     }
+
+    @Transactional
+    public AuthResponse refreshToken(String refreshToken) {
+        // Extraire l'email depuis le refresh token
+        String userEmail;
+        try {
+            userEmail = jwtService.extractUsername(refreshToken);
+        } catch (Exception e) {
+            throw new AuthenticationException("Refresh token invalide ou expiré");
+        }
+
+        // Récupérer l'utilisateur
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new AuthenticationException("Utilisateur non trouvé"));
+
+        // Vérifier si le refresh token est valide
+        if (!jwtService.isTokenValid(refreshToken, user)) {
+            throw new AuthenticationException("Refresh token invalide");
+        }
+
+        // Générer un nouveau access token
+        String newAccessToken = jwtService.generateToken(user);
+
+        // Créer la réponse
+        AuthResponse response = authMapper.mapToAuthResponse(user);
+        response.setMessage("Token rafraîchi avec succès");
+        response.setAccessToken(newAccessToken);
+        response.setRefreshToken(refreshToken);
+
+        return response;
+    }
 }

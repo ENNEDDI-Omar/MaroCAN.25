@@ -37,6 +37,22 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/api-docs/**").permitAll()
+                        // Routes publiques qui ne nécessitent pas d'authentification
+
+                        // Routes utilisateurs normaux
+                        .requestMatchers("/api/matches/**").permitAll() // Accessible à tous pour voir les matchs
+                        .requestMatchers("/api/tickets/**").hasAnyAuthority("USER", "ADMIN")
+
+                        // Routes réservées aux administrateurs
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/statistics/**").hasAuthority("ADMIN")
+
+                        // Routes pour les médias
+                        .requestMatchers("/api/media/**").hasAuthority("MEDIA")
+
+                        // Routes pour les volontaires
+                        .requestMatchers("/api/volunteers/**").hasAuthority("VOLONTAIRE")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
