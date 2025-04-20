@@ -1,17 +1,24 @@
-import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TicketReservationComponent } from '../../features/tickets/ticket-reservation/ticket-reservation.component';
 
-import { ticketReservationGuard } from './ticket-reservation.guard';
 
-describe('ticketReservationGuard', () => {
-  const executeGuard: CanActivateFn = (...guardParameters) => 
-      TestBed.runInInjectionContext(() => ticketReservationGuard(...guardParameters));
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
+describe('TicketReservationComponent', () => {
+  let component: TicketReservationComponent;
+  let fixture: ComponentFixture<TicketReservationComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [TicketReservationComponent]
+    })
+      .compileComponents();
+
+    fixture = TestBed.createComponent(TicketReservationComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
-  it('should be created', () => {
-    expect(executeGuard).toBeTruthy();
+  it('should create', () => {
+    expect(component).toBeTruthy();
   });
 });

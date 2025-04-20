@@ -6,4 +6,5 @@ export interface TicketOrder {
   tickets: OrderTicket[];
   totalAmount: number;
   paymentStatus: 'PENDING' | 'COMPLETED' | 'FAILED';
+  createdAt?: string | Date;
 }

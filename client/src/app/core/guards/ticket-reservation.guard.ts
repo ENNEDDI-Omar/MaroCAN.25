@@ -1,4 +1,3 @@
-// src/app/core/guards/ticket-reservation.guard.ts
 import { Injectable } from '@angular/core';
 import {
   CanActivate,

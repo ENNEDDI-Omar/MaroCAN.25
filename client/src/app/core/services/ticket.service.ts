@@ -38,4 +38,15 @@ export class TicketService {
   initiatePayment(orderId: number): Observable<{sessionId: string, checkoutUrl: string}> {
     return this.http.post<{sessionId: string, checkoutUrl: string}>(`${this.apiUrl}/orders/checkout`, { orderId });
   }
+
+
+  getOrderDetails(orderId: number): Observable<TicketOrder> {
+    return this.http.get<TicketOrder>(`${this.apiUrl}/orders/${orderId}`);
+  }
+
+  downloadTicketsPDF(orderId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/orders/${orderId}/tickets/pdf`, {
+      responseType: 'blob'
+    });
+  }
 }
