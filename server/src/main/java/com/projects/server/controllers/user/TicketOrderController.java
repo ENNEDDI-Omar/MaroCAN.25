@@ -43,8 +43,13 @@ public class TicketOrderController {
     public ResponseEntity<OrderResponse> completePayment(
             @RequestParam String sessionId,
             Authentication authentication) {
-        String userEmail = authentication.getName();
-        return ResponseEntity.ok(reservationService.completePayment(sessionId, userEmail));
+        try {
+            String userEmail = authentication.getName();
+            return ResponseEntity.ok(reservationService.completePayment(sessionId, userEmail));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     /**
@@ -71,4 +76,6 @@ public class TicketOrderController {
         String userEmail = authentication.getName();
         return ResponseEntity.ok(reservationService.getOrderById(id, userEmail));
     }
+
+
 }

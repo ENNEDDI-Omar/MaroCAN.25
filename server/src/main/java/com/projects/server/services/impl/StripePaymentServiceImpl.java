@@ -24,18 +24,18 @@ public class StripePaymentServiceImpl implements PaymentService {
     @Override
     public PaymentInitResponse initiatePayment(TicketOrder order) {
         try {
-            // Créer une session de paiement Stripe
+
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl("http://localhost:4200/payment/success?session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl("http://localhost:4200/payment/cancel?session_id={CHECKOUT_SESSION_ID}")
+                    .setSuccessUrl("http://localhost:4200/tickets/payment/success?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl("http://localhost:4200/tickets/payment/cancel?session_id={CHECKOUT_SESSION_ID}")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setQuantity(1L)
                                     .setPriceData(
                                             SessionCreateParams.LineItem.PriceData.builder()
                                                     .setCurrency("mad")
-                                                    .setUnitAmount((long) (order.getTotalAmount() * 100)) // Stripe utilise les centimes
+                                                    .setUnitAmount((long) (order.getTotalAmount() * 100))
                                                     .setProductData(
                                                             SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                                                     .setName("Commande de billets CAN 2025 #" + order.getOrderReference())

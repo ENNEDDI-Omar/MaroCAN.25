@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { authGuard } from '../../core/guards/auth.guard';
 import { TicketReservationGuard } from '../../core/guards/ticket-reservation.guard';
+import {OrderConfirmationComponent} from "./order-confirmation/order-confirmation.component";
 
 const routes: Routes = [
   {
@@ -27,6 +28,16 @@ const routes: Routes = [
   {
     path: 'orders',
     loadComponent: () => import('./order-history/order-history.component').then(m => m.OrderHistoryComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'order/confirmation/:orderId',
+    loadComponent: () => import('./order-confirmation/order-confirmation.component').then(m => m.OrderConfirmationComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'payment/success',
+    loadComponent: () => import('./order-confirmation/order-confirmation.component').then(m => m.OrderConfirmationComponent),
     canActivate: [authGuard]
   }
 ];

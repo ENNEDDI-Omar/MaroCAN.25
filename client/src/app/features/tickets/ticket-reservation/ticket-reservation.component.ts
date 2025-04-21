@@ -6,6 +6,7 @@ import { TicketService } from '../../../core/services/ticket.service';
 import { Match } from '../../../core/models/ticket/match';
 import { TicketReservation } from '../../../core/models/ticket/ticket-reservation';
 import { Observable, switchMap, catchError, of } from 'rxjs';
+import { CartService } from '../../../core/services/cart.service';
 
 @Component({
   selector: 'app-ticket-reservation',
@@ -155,7 +156,8 @@ export class TicketReservationComponent implements OnInit {
     private route: ActivatedRoute,
     private ticketService: TicketService,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+  private cartService: CartService
   ) {
     this.initForm();
   }
@@ -238,9 +240,9 @@ export class TicketReservationComponent implements OnInit {
 
         this.ticketService.reserveTickets(reservation).subscribe({
           next: (tickets) => {
-            this.router.navigate(['/tickets/order/cart'], {
-              state: { tickets: tickets }
-            });
+            // Utiliser CartService au lieu de state
+            this.cartService.setTickets(tickets);
+            this.router.navigate(['/tickets/order/cart']);
           },
           error: (err) => {
             this.error = 'La réservation a échoué. Veuillez réessayer.';

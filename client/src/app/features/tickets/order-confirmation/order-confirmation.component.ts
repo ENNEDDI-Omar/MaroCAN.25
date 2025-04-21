@@ -104,27 +104,56 @@ export class OrderConfirmationComponent implements OnInit {
     private router: Router
   ) {}
 
+
   ngOnInit(): void {
-    this.loadOrderConfirmation();
+    // Vérifier d'abord la présence d'un session_id dans les paramètres de l'URL
+    this.route.queryParams.subscribe(params => {
+      const sessionId = params['session_id'];
+
+      if (sessionId) {
+        // Si un session_id est présent, confirmer le paiement
+        this.confirmPayment(sessionId);
+      } else {
+        // Sinon, essayer de charger la commande depuis l'ID
+        const orderId = Number(this.route.snapshot.paramMap.get('orderId'));
+        if (orderId) {
+          this.loadOrderConfirmation(orderId);  // Utiliser le nom de méthode correct
+        } else {
+          // Ni session_id ni orderId trouvé, rediriger vers la liste des commandes
+          this.router.navigate(['/tickets/orders']);
+        }
+      }
+    });
   }
 
-  private loadOrderConfirmation(): void {
-    this.route.paramMap.subscribe(params => {
-      const orderId = Number(params.get('orderId'));
+  private confirmPayment(sessionId: string): void {
+    this.loading = true;
+    this.ticketService.completePayment(sessionId).subscribe({
+      next: (order) => {
+        this.order = order;
+        this.loading = false;
+        // Mettre à jour l'URL pour inclure l'ID de commande
+        this.router.navigate(
+            ['/tickets/order/confirmation', order.id],
+            { replaceUrl: true }
+        );
+      },
+      error: (err) => {
+        this.error = 'Impossible de confirmer le paiement: ' + err.message;
+        this.loading = false;
+      }
+    });
+  }
 
-      if (orderId) {
-        this.ticketService.getOrderDetails(orderId).subscribe({
-          next: (order) => {
-            this.order = order;
-            this.loading = false;
-          },
-          error: (err) => {
-            this.error = 'Impossible de charger les détails de la commande';
-            this.loading = false;
-          }
-        });
-      } else {
-        // Rediriger si pas d'ID de commande
+  private loadOrderConfirmation(orderId: number): void {
+    this.ticketService.getOrderDetails(orderId).subscribe({
+      next: (order) => {
+        this.order = order;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Impossible de charger les détails de la commande';
+        this.loading = false;
         this.router.navigate(['/tickets']);
       }
     });
@@ -133,18 +162,24 @@ export class OrderConfirmationComponent implements OnInit {
   downloadTickets(): void {
     if (this.order?.id) {
       this.ticketService.downloadTicketsPDF(this.order.id).subscribe({
-        next: (pdf) => {
-          const blob = new Blob([pdf], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
+        next: (pdfBlob) => {
+          // Créer une URL pour le blob
+          const url = window.URL.createObjectURL(pdfBlob);
+
+          // Créer un lien temporaire et déclencher le téléchargement
           const link = document.createElement('a');
           link.href = url;
           link.download = `billets_${this.order?.orderReference || 'commande'}.pdf`;
+          document.body.appendChild(link);
           link.click();
 
+          // Nettoyer
+          document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
         },
         error: (err) => {
           console.error('Erreur lors du téléchargement', err);
+          this.error = 'Impossible de télécharger les billets. Veuillez réessayer plus tard.';
         }
       });
     }

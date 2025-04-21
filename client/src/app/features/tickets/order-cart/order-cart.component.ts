@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TicketService } from '../../../core/services/ticket.service';
 import { OrderTicket } from '../../../core/models/ticket/order-ticket';
+import {CartService} from "../../../core/services/cart.service";
 
 @Component({
   selector: 'app-order-cart',
@@ -85,15 +86,13 @@ export class OrderCartComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private ticketService: TicketService
+    private ticketService: TicketService,
+    private cartService: CartService,
   ) {}
 
   ngOnInit(): void {
-    // Récupérer les tickets depuis l'état de navigation
-    const navigation = this.router.getCurrentNavigation();
-    if (navigation?.extras?.state) {
-      this.tickets = navigation.extras.state['tickets'] || [];
-    }
+    this.tickets = this.cartService.getTickets();
+    console.log('Tickets dans le panier:', this.tickets);
   }
 
   removeTicket(index: number): void {
@@ -106,14 +105,21 @@ export class OrderCartComponent implements OnInit {
 
   proceedToPayment(): void {
     if (this.tickets.length) {
-      // Créer une commande avec les tickets
-      this.ticketService.createOrder(this.tickets).subscribe({
+      const ticketIds = this.tickets.map(ticket => ticket.id);
+
+      this.ticketService.createOrder({
+        ticketIds: ticketIds,
+        paymentInfo: 'ONLINE_PAYMENT'
+      }).subscribe({
         next: (order) => {
-          // Naviguer vers la page de confirmation avec l'ID de commande
-          this.router.navigate(['/tickets/order/confirmation', order.id]);
+          // Redirection directe vers l'URL de paiement Stripe
+          if (order.checkoutUrl) {
+            window.location.href = order.checkoutUrl;
+          } else {
+            console.error('URL de paiement non disponible');
+          }
         },
         error: (err) => {
-          // Gestion des erreurs
           console.error('Erreur lors de la création de la commande', err);
         }
       });

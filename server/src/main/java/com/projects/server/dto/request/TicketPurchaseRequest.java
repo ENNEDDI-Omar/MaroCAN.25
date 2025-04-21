@@ -19,5 +19,5 @@ public class TicketPurchaseRequest {
     private List<Long> ticketIds;
 
     @NotBlank(message = "Les informations de paiement sont requises")
-    private String paymentInfo;
+    private String paymentInfo = "ONLINE_PAYMENT";
 }

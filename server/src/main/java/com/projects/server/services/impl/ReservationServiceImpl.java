@@ -29,10 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -150,13 +147,21 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public OrderResponse completePayment(String sessionId, String userEmail) {
+    public OrderResponse completePayment(String sessionId, String userIdentifier) {
+        log.info("Tentative de compléter le paiement pour session: {}, userIdentifier: {}", sessionId, userIdentifier);
+
         // Récupérer la commande associée à cette session
         TicketOrder order = ticketOrderRepository.findByPaymentReference(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée pour la session: " + sessionId));
 
+        // Récupérer l'utilisateur à partir de l'identifiant (email ou username)
+        User authenticatedUser = getUserByEmail(userIdentifier);
+
         // Vérifier que la commande appartient à l'utilisateur
-        if (!order.getUser().getEmail().equals(userEmail)) {
+        // Comparer par ID d'utilisateur plutôt que par email
+        if (!order.getUser().getId().equals(authenticatedUser.getId())) {
+            log.warn("Tentative d'accès non autorisé: user de la commande = {}, user authentifié = {}",
+                    order.getUser().getUsername(), authenticatedUser.getUsername());
             throw new AuthenticationException("Vous n'êtes pas autorisé à accéder à cette commande");
         }
 
@@ -255,7 +260,6 @@ public class ReservationServiceImpl implements ReservationService {
         log.info("Réservation annulée pour {} billets par l'utilisateur: {}", tickets.size(), userEmail);
     }
 
-    // Méthodes privées utilitaires
 
     private void validateTicketsForPurchase(List<Ticket> tickets) {
         if (tickets.isEmpty()) {
@@ -273,9 +277,9 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             // Vérifier que le billet n'est pas déjà dans une commande
-            if (ticket.getOrder() != null) {
-                throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " est déjà associé à une commande");
-            }
+            //if (ticket.getOrder() != null) {
+                //throw new IllegalStateException("Le billet avec l'id " + ticket.getId() + " est déjà associé à une commande");
+            //}
         }
     }
 
@@ -343,9 +347,16 @@ public class ReservationServiceImpl implements ReservationService {
                 .build();
     }
 
-    private User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email: " + email));
+    private User getUserByEmail(String emailOrUsername) {
+        // Essayer d'abord par email
+        Optional<User> userByEmail = userRepository.findByEmail(emailOrUsername);
+        if (userByEmail.isPresent()) {
+            return userByEmail.get();
+        }
+
+        // Si pas trouvé, essayer par username
+        return userRepository.findByUsername(emailOrUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'identifiant: " + emailOrUsername));
     }
 
     private String generateTicketCode(Match match, SectionType sectionType) {

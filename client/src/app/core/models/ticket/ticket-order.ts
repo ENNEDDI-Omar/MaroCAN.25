@@ -7,4 +7,5 @@ export interface TicketOrder {
   totalAmount: number;
   paymentStatus: 'PENDING' | 'COMPLETED' | 'FAILED';
   createdAt?: string | Date;
+  checkoutUrl?: string;
 }
