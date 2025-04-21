@@ -1,32 +1,47 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
-    <div class="text-center">
-      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-        Créer un compte
-      </h2>
-      <p class="mt-2 text-sm text-gray-600">
-        Ou
-        <a routerLink="/auth/login" class="font-medium text-blue-600 hover:text-blue-500">
-          connectez-vous à votre compte
-        </a>
-      </p>
+<!-- src/app/features/auth/register/register.component.html -->
+<section class="min-h-screen flex items-stretch text-white">
+  <div class="lg:flex w-1/2 hidden bg-gray-500 bg-no-repeat bg-cover relative items-center"
+       style="background-image: url('assets/images/players.jpg');">
+    <div class="absolute bg-black opacity-40 inset-0 z-0"></div>
+    <div class="w-full px-24 z-10">
+      <h1 class="text-5xl font-bold text-left tracking-wide">Rendez-le spécial</h1>
+      <p class="text-3xl my-4">Réservez votre billet et profitez de votre moment de manière unique, n'importe où.</p>
+    </div>
+    <div class="bottom-0 absolute p-4 text-center right-0 left-0 flex justify-center space-x-4">
+      <!-- Social icons can be added here if needed -->
+    </div>
+  </div>
+
+  <div class="lg:w-1/2 w-full flex items-center justify-center text-center md:px-16 px-0 z-0"
+       style="background-color: #161616;">
+    <div class="absolute lg:hidden z-10 inset-0 bg-gray-500 bg-no-repeat bg-cover items-center"
+         >
+      <div class="absolute bg-black opacity-60 inset-0 z-0"></div>
     </div>
 
-    <!-- Alert d'erreur -->
-    <div *ngIf="error$ | async as error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-      <span class="block sm:inline">{{ error }}</span>
-    </div>
+    <div class="w-full py-6 z-20">
+      <a routerLink="/" class="inline-flex items-center gap-2.5 text-2xl font-bold text-white md:text-3xl" aria-label="logo">
+        <img src="assets/images/logo-can2025.png" alt="logo" class="w-10 h-10 md:w-12 md:h-12" />
+        MaroCan.25
+      </a>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
-      <div class="space-y-4">
-        <div>
-          <label for="username" class="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+      <!-- Error Alert -->
+      <div *ngIf="error$ | async as error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ error }}</span>
+      </div>
+
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="onSubmit()"
+        class="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2"
+      >
+        <div class="pb-2 pt-4">
           <input
             id="username"
             formControlName="username"
             type="text"
             required
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            class="block w-full px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-lg dark:placeholder-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-400 focus:ring-blue-400 focus:outline-none focus:ring focus:ring-opacity-40"
             placeholder="Nom d'utilisateur"
           />
           <div *ngIf="registerForm.get('username')?.invalid && (registerForm.get('username')?.dirty || registerForm.get('username')?.touched)" class="text-red-500 text-xs mt-1">
@@ -36,14 +51,13 @@
           </div>
         </div>
 
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+        <div class="pb-2 pt-4">
           <input
             id="email"
             formControlName="email"
             type="email"
             required
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            class="block w-full px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-lg dark:placeholder-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-400 focus:ring-blue-400 focus:outline-none focus:ring focus:ring-opacity-40"
             placeholder="Adresse email"
           />
           <div *ngIf="registerForm.get('email')?.invalid && (registerForm.get('email')?.dirty || registerForm.get('email')?.touched)" class="text-red-500 text-xs mt-1">
@@ -52,14 +66,13 @@
           </div>
         </div>
 
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+        <div class="pb-2 pt-4">
           <input
             id="password"
             formControlName="password"
             type="password"
             required
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            class="block w-full px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-lg dark:placeholder-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-400 focus:ring-blue-400 focus:outline-none focus:ring focus:ring-opacity-40"
             placeholder="Mot de passe"
           />
           <div *ngIf="registerForm.get('password')?.invalid && (registerForm.get('password')?.dirty || registerForm.get('password')?.touched)" class="text-red-500 text-xs mt-1">
@@ -71,14 +84,13 @@
           </div>
         </div>
 
-        <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
+        <div class="pb-2 pt-4">
           <input
             id="confirmPassword"
             formControlName="confirmPassword"
             type="password"
             required
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            class="block w-full px-5 py-3 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-lg dark:placeholder-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-400 focus:ring-blue-400 focus:outline-none focus:ring focus:ring-opacity-40"
             placeholder="Confirmer le mot de passe"
           />
           <div *ngIf="registerForm.get('confirmPassword')?.invalid && (registerForm.get('confirmPassword')?.dirty || registerForm.get('confirmPassword')?.touched)" class="text-red-500 text-xs mt-1">
@@ -88,30 +100,39 @@
             Les mots de passe ne correspondent pas
           </div>
         </div>
-      </div>
 
-      <div>
-        <button
-          type="submit"
-          [disabled]="registerForm.invalid || (loading$ | async)"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-        >
-          <span *ngIf="loading$ | async" class="absolute left-0 inset-y-0 flex items-center pl-3">
-            <!-- Spinner -->
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </span>
-          S'inscrire
-        </button>
-      </div>
-    </form>
+        <div class="pb-2 pt-4 translate-x-40">
+          <div>
+            <a
+              routerLink="/auth/login"
+              class="underline text-sm text-white hover:text-indigo-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Déjà inscrit ?
+            </a>
+          </div>
+          <div class="px-4 pb-2 pt-4">
+            <button
+              type="submit"
+              [disabled]="registerForm.invalid || (loading$ | async)"
+              class="uppercase block w-full p-4 text-lg rounded-full bg-green-600 hover:bg-indigo-600 focus:outline-none"
+            >
+                            <span *ngIf="loading$ | async" class="absolute left-0 inset-y-0 flex items-center pl-3">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+              S'inscrire
+            </button>
+          </div>
+        </div>
+      </form>
 
-    <div class="mt-6 text-center">
-      <a routerLink="/" class="font-medium text-sm text-gray-600 hover:text-gray-900">
-        Retour à l'accueil
-      </a>
+      <div class="mt-6 text-center">
+        <a routerLink="/" class="font-medium text-sm text-gray-600 hover:text-gray-900">
+          Retour à l'accueil
+        </a>
+      </div>
     </div>
   </div>
-</div>
+</section>

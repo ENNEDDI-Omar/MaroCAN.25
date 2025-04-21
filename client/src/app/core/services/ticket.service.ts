@@ -30,7 +30,7 @@ const API_ENDPOINTS = {
 export class TicketService {
   constructor(private http: HttpClient) {}
 
-  getUpcomingMatches(): Observable<Match[]> {
+  getAllUpcomingMatches(): Observable<Match[]> {
     return this.http.get<Match[]>(`${environment.apiUrl}${API_ENDPOINTS.MATCHES}`);
   }
 

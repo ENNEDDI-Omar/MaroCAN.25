@@ -11,7 +11,7 @@ export class CartService {
 
   setTickets(tickets: OrderTicket[]): void {
     this.ticketsSubject.next(tickets);
-    // Option: sauvegarder également dans sessionStorage pour persistance
+
     sessionStorage.setItem('cartTickets', JSON.stringify(tickets));
   }
 

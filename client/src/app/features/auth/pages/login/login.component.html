@@ -1,78 +1,114 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-lg shadow-md">
-    <div class="text-center">
-      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
-        Connexion
-      </h2>
-      <p class="mt-2 text-sm text-gray-600">
-        Ou
-        <a routerLink="/auth/register" class="font-medium text-blue-600 hover:text-blue-500">
-          créez un compte
-        </a>
-      </p>
+<!-- src/app/features/auth/login/login.component.html -->
+<section class="min-h-screen flex items-stretch text-white">
+  <div class="lg:flex w-1/2 hidden bg-gray-500 bg-no-repeat bg-cover relative items-center"
+       style="background-image: url('/assets/images/cup2.jpg');">
+    <div class="absolute bg-black opacity-40 inset-0 z-0"></div>
+    <div class="w-full px-24 z-10">
+      <h1 class="text-5xl font-bold text-left tracking-wide">Rendez-le spécial</h1>
+      <p class="text-3xl my-4">Reserve your Ticket and enjoy your moment in a unique way, anywhere.</p>
     </div>
-
-    <!-- Alert d'erreur -->
-    <div *ngIf="error$ | async as error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-      <span class="block sm:inline">{{ error }}</span>
-    </div>
-
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
-      <div class="rounded-md shadow-sm -space-y-px">
-        <div>
-          <label for="email" class="sr-only">Adresse email</label>
-          <input
-            id="email"
-            formControlName="email"
-            type="email"
-            required
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-            placeholder="Adresse email"
-          />
-          <div *ngIf="loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)" class="text-red-500 text-xs mt-1">
-            <div *ngIf="loginForm.get('email')?.errors?.['required']">L'email est requis</div>
-            <div *ngIf="loginForm.get('email')?.errors?.['email']">Veuillez entrer un email valide</div>
-          </div>
-        </div>
-        <div>
-          <label for="password" class="sr-only">Mot de passe</label>
-          <input
-            id="password"
-            formControlName="password"
-            type="password"
-            required
-            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-            placeholder="Mot de passe"
-          />
-          <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" class="text-red-500 text-xs mt-1">
-            <div *ngIf="loginForm.get('password')?.errors?.['required']">Le mot de passe est requis</div>
-            <div *ngIf="loginForm.get('password')?.errors?.['minlength']">Le mot de passe doit contenir au moins 8 caractères</div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <button
-          type="submit"
-          [disabled]="loginForm.invalid || (loading$ | async)"
-          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-        >
-          <span *ngIf="loading$ | async" class="absolute left-0 inset-y-0 flex items-center pl-3">
-            <!-- Spinner -->
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </span>
-          Se connecter
-        </button>
-      </div>
-    </form>
-
-    <div class="mt-6 text-center">
-      <a routerLink="/" class="font-medium text-sm text-gray-600 hover:text-gray-900">
-        Retour à l'accueil
-      </a>
+    <div class="bottom-0 absolute p-4 text-center right-0 left-0 flex justify-center space-x-4">
+      <!-- Social icons can be added here if needed -->
     </div>
   </div>
-</div>
+
+  <div class="lg:w-1/2 w-full flex items-center justify-center text-center md:px-16 px-0 z-0"
+       style="background-color: #161616;">
+
+    <div class="absolute lg:hidden z-10 inset-0 bg-gray-500 bg-no-repeat bg-cover items-center"
+         style=";">
+      <div class="absolute bg-black opacity-60 inset-0 z-0"></div>
+    </div>
+
+    <div class="w-full py-6 z-20">
+      <a routerLink="/" class="inline-flex items-center gap-2.5 text-2xl font-bold text-white md:text-3xl" aria-label="logo">
+        <img src="/assets/images/logo-can2025.png" alt="logo" class="w-10 h-10 md:w-12 md:h-12" />
+        MaroCan.25
+      </a>
+
+      <div class="w-full px-4 lg:px-0 mx-auto max-w-md">
+        <!-- Error Alert -->
+        <div *ngIf="error$ | async as error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          {{ error }}
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mt-8 space-y-6">
+          <div class="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label for="email" class="sr-only">Adresse email</label>
+              <input
+                id="email"
+                formControlName="email"
+                type="email"
+                required
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Adresse email"
+              />
+              <div *ngIf="loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)" class="text-red-500 text-xs mt-1">
+                <div *ngIf="loginForm.get('email')?.errors?.['required']">L'email est requis</div>
+                <div *ngIf="loginForm.get('email')?.errors?.['email']">Veuillez entrer un email valide</div>
+              </div>
+            </div>
+            <div>
+              <label for="password" class="sr-only">Mot de passe</label>
+              <input
+                id="password"
+                formControlName="password"
+                type="password"
+                required
+                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Mot de passe"
+              />
+              <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" class="text-red-500 text-xs mt-1">
+                <div *ngIf="loginForm.get('password')?.errors?.['required']">Le mot de passe est requis</div>
+                <div *ngIf="loginForm.get('password')?.errors?.['minlength']">Le mot de passe doit contenir au moins 8 caractères</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input
+                id="remember_me"
+                type="checkbox"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              >
+              <label for="remember_me" class="ml-2 block text-sm text-gray-900">
+                Se souvenir de moi
+              </label>
+            </div>
+
+            <div class="text-sm">
+              <a routerLink="/auth/forget-password" class="font-medium text-blue-600 hover:text-blue-500">
+                Mot de passe oublié ?
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              [disabled]="loginForm.invalid || (loading$ | async)"
+              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              <span *ngIf="loading$ | async" class="absolute left-0 inset-y-0 flex items-center pl-3">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </span>
+              Se connecter
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-6 text-center">
+          <span class="text-gray-400">Pas de compte ? </span>
+          <a routerLink="/auth/register" class="font-medium text-blue-600 hover:text-blue-500">
+            Créer un compte
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

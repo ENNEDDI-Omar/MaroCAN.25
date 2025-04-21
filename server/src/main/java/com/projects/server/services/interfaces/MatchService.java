@@ -25,4 +25,8 @@ public interface MatchService {
     List<MatchResponse> getMatchesByStadium(String stadiumId);
 
     void updateMatchScore(Long id, Integer matchScore);
+
+
+
+
 }

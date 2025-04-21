@@ -30,4 +30,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findByHomeTeamOrAwayTeamOrderByDateTimeAsc(TeamType homeTeam, TeamType awayTeam);
 
     List<Match> findByStadiumOrderByDateTimeAsc(StadiumType stadium);
+
+
 }

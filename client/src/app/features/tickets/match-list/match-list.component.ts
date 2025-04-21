@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TicketService } from '../../../core/services/ticket.service';
 import { Match } from '../../../core/models/ticket/match';
-import { Observable, catchError, of } from 'rxjs';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-match-list',
@@ -14,16 +15,30 @@ import { Observable, catchError, of } from 'rxjs';
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold mb-6">Matchs disponibles - CAN 2025</h1>
 
+      <!-- Filtres -->
+      <div class="mb-6 flex flex-wrap gap-4">
+        <!-- Note: Sans groupe dans le modèle, le filtre est désactivé
+        <div class="text-gray-600">
+          Filtrage par groupe actuellement non disponible
+        </div>-->
+      </div>
+
+      <!-- Indicateur de chargement -->
       <div *ngIf="loading" class="text-center text-gray-600">
         Chargement des matchs...
       </div>
 
+      <!-- Message d'erreur -->
       <div *ngIf="error" class="text-center text-red-500">
         {{ error }}
       </div>
 
-      <div *ngIf="matches$ | async as matches" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let match of matches" class="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
+      <!-- Liste des matchs -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            *ngFor="let match of paginatedMatches"
+            class="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition"
+        >
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">
               {{ match.homeTeam }} vs {{ match.awayTeam }}
@@ -63,24 +78,49 @@ import { Observable, catchError, of } from 'rxjs';
           </div>
 
           <button
-            [routerLink]="['/tickets/match', match.id, 'reserve']"
-            class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+              [routerLink]="['/tickets/match', match.id, 'reserve']"
+              class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
           >
             Réserver des billets
           </button>
         </div>
       </div>
 
-      <div *ngIf="(matches$ | async)?.length === 0 && !loading" class="text-center py-12">
-        <p class="text-xl text-gray-600">Aucun match disponible actuellement.</p>
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" class="mt-8 flex justify-center space-x-2">
+        <button
+            *ngFor="let page of pageArray"
+            (click)="changePage(page)"
+            [class.bg-blue-500]="currentPage === page"
+            [class.text-white]="currentPage === page"
+            class="px-4 py-2 border rounded"
+        >
+          {{ page + 1 }}
+        </button>
+      </div>
+
+      <!-- Message si aucun match -->
+      <div *ngIf="paginatedMatches.length === 0 && !loading" class="text-center py-12">
+        <p class="text-xl text-gray-600">Aucun match disponible.</p>
       </div>
     </div>
   `
 })
 export class MatchListComponent implements OnInit {
-  matches$: Observable<Match[]> = of([]);
+  // Données originales
+  allMatches: Match[] = [];
+
+  // Données filtrées et paginées
+  paginatedMatches: Match[] = [];
+
+  // États
   loading = true;
   error: string | null = null;
+
+  // Pagination
+  currentPage = 0;
+  pageSize = 6;
+  totalPages = 0;
 
   constructor(private ticketService: TicketService) {}
 
@@ -89,13 +129,41 @@ export class MatchListComponent implements OnInit {
   }
 
   loadMatches(): void {
-    this.matches$ = this.ticketService.getUpcomingMatches().pipe(
-      catchError(err => {
-        this.error = 'Impossible de charger les matchs. Veuillez réessayer.';
-        this.loading = false;
-        return of([]);
-      })
+    this.loading = true;
+    this.ticketService.getAllUpcomingMatches().pipe(
+        catchError(err => {
+          this.error = 'Impossible de charger les matchs. Veuillez réessayer.';
+          this.loading = false;
+          return of([]);
+        })
+    ).subscribe(matches => {
+      this.allMatches = matches;
+      this.updatePaginatedMatches();
+      this.loading = false;
+    });
+  }
+
+  updatePaginatedMatches(): void {
+    const startIndex = this.currentPage * this.pageSize;
+    this.paginatedMatches = this.allMatches.slice(
+        startIndex,
+        startIndex + this.pageSize
     );
+
+    // Calculer le nombre total de pages
+    this.totalPages = Math.ceil(this.allMatches.length / this.pageSize);
+  }
+
+  changePage(page: number): void {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.updatePaginatedMatches();
+    }
+  }
+
+  // Getter pour générer les numéros de page
+  get pageArray(): number[] {
+    return Array(this.totalPages).fill(0).map((_, i) => i);
   }
 
   formatDate(date: Date): string {
