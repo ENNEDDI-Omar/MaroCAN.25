@@ -45,7 +45,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final PaymentService paymentService;
     private final TicketDeliveryService ticketDeliveryService;
 
-    // Durée de réservation en minutes
+
     private static final int RESERVATION_DURATION_MINUTES = 30;
 
     @Override

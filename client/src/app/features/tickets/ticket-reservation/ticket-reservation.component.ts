@@ -238,6 +238,8 @@ export class TicketReservationComponent implements OnInit {
           quantity: quantity
         };
 
+
+
         this.ticketService.reserveTickets(reservation).subscribe({
           next: (tickets) => {
             // Utiliser CartService au lieu de state
